@@ -1,7 +1,7 @@
 const mercadopago = require('mercadopago')
 
 mercadopago.configure({
-    access_token: 'TOKEN'
+    access_token: process.env.acessToken
 })
 
 console.log(' ___________________________________________')

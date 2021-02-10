@@ -1,6 +1,6 @@
 module.exports = async (client) => {
 
-    let prefix = "/"
+    let prefix = "-"
 
     client.on('message', async (message) => {
 

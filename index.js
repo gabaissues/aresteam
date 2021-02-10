@@ -1,5 +1,6 @@
 require('dotenv').config()
 require('./src/services/mercadopago.js')
+require('./src/services/firebase.js')
 
 const { Client, Collection } = require('discord.js')
 const client = new Client()

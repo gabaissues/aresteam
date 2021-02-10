@@ -32,7 +32,15 @@ module.exports = {
                     ]
                 };
 
-                mercadopago.preferences.create(preferencia)
+                var promise = await mercadopago.preferences.create(preferencia)
+                
+                var embed = {
+                    title: '💳 ⋅ Perfeito!',
+                    description: `O link de pagamento foi criado com sucesso, boas vendas ;)\n\n(${promise.body.init_point})`,
+                    color: '#4895EF'
+                }
+
+                message.reply({ embed: embed })
 
             })
 
