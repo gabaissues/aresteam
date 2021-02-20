@@ -6,18 +6,36 @@ module.exports = {
     aliases: ['fatura'],
     run: async(client, message, args) => {
 
-        if(!message.member.hasPermission('ADMINISTRATOR')) return message.reply('Somente administradores podem executar este comando.')
+        var embed = {
+            title: ':woman_astronaut: Você não possui permissão!',
+            description: 'Você não possui permissão para executar este comando.',
+            color: '#4895EF'
+        }
 
-        var msg = await message.reply('Qual seria o nome do produto? **(60 segundos)**')
+        if(!message.member.hasPermission('ADMINISTRATOR')) return message.reply({ embed: embed })
+
+        var embed = {
+            title: ':man_scientist: Pergunta #1',
+            description: 'Qual será o nome desse serviço?',
+            color: '#4895EF'
+        }
+
+        var msg = await message.reply({ embed: embed })
 
         var filtro = (m) => m.author.id === message.author.id 
-        collector = msg.channel.createMessageCollector(filtro, { max: 1, time: 60000 })
+        collector = msg.channel.createMessageCollector(filtro, { max: 1 })
 
         collector.on('collect', async (msg) => {
 
-            var msg1 = await message.reply('Qual seria o preço do produto? **(60 segundos)**')
+            var embed = {
+                title: ':man_scientist: Pergunta #2',
+                description: 'Qual o valor desse serviço?',
+                color: '#4895EF'
+            }
 
-            collector = msg.channel.createMessageCollector(filtro, { max: 1, time: 60000 })
+            var msg1 = await message.reply({ embed: embed })
+
+            collector = msg.channel.createMessageCollector(filtro, { max: 1 })
             collector.on('collect', async (msg1) => {
 
                 if(isNaN(msg1.content)) return message.reply('Você pode inserir somente números como preço.')
@@ -35,8 +53,8 @@ module.exports = {
                 var promise = await mercadopago.preferences.create(preferencia)
                 
                 var embed = {
-                    title: '💳 ⋅ Perfeito!',
-                    description: `O link de pagamento foi criado com sucesso, boas vendas ;)\n\n(${promise.body.init_point})`,
+                    title: ':shopping_cart: Fatura disponível para pagamento!',
+                    description: `Clique no link abaixo para efetuar o pagamento.\n\nFatura:\n${promise.body.init_point}\n\n:man_astronaut: Obrigado por **aceitar*8 trabalhar conosco!`,
                     color: '#4895EF'
                 }
 

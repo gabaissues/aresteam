@@ -6,7 +6,13 @@ module.exports = {
     aliases: ['portfólio', 'portfolio'],
     run: async(client, message, args) => {
 
-        if(!args[0]) return message.reply('Você utilizou o comando **incorretamente**. Utilize: -portfólio <endereço>')
+        var embed = {
+            title: ':man_scientist: Comando incorreto!',
+            description: `Você utilizou o comando incorretamente. Utilize: -portfólio <link>`,
+            color: '#4895EF'
+        }
+
+        if(!args[0]) return message.reply({ embed: embed })
 
         const user = await database.ref(`Perfils/${message.author.id}`).once('value')
         if(user.val() === null) {
@@ -18,7 +24,13 @@ module.exports = {
                 recebido: 0
             })
     
-            message.reply('Portfólio definido com **sucesso**!')    
+            var embed = {
+                title: ':man_scientist: Portfólio definido com sucesso!',
+                description: `Obrigado por nos informar seu portfólio.`,
+                color: '#4895EF'
+            }
+
+            message.reply({ embed: embed })
 
         } else {
 
@@ -26,8 +38,14 @@ module.exports = {
                 portfolio: args[0]
             })
     
-            message.reply('Portfólio definido com **sucesso**!')    
+            var embed = {
+                title: ':man_scientist: Portfólio definido com sucesso!',
+                description: `Obrigado por nos informar seu portfólio.`,
+                color: '#4895EF'
+            }
 
+            message.reply({ embed: embed })
+            
         }
     }
 }

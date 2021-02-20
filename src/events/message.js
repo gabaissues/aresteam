@@ -28,7 +28,8 @@ module.exports = async (client) => {
         if(!command) {
 
             var embed = {
-                title: '<:error:804747511214243851> ⋅ Verifique a sua escrita, o comando inserido não existe.',
+                title: ':man_scientist: Comando inexistente!',
+                description: 'Não encontramos esse comando em nosso banco de dados.',
                 color: 'RED'
             }
 

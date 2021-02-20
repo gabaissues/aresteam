@@ -8,14 +8,8 @@ module.exports = async (client) => {
         console.log(`|_____________________________________________|`)
 
         var embed = {
-            author: {
-                name: `Suporte.`,
-                icon_url: client.guilds.cache.get('782061667717742612').iconURL()
-            },
-            description: `Olá! Seja bem-vindo(a) ao nosso sistema de atendimento. Para que possamos começar com o seu atendimento, clique na reação que deseja tratar sobre. Após isso, vá até o canal que você foi mencionado(a) para que possamos tratar sobre o assunto. Tenha um otimo atendimento ;)\n\n🙇 **⋅ Categorias.**\n\n> 😭 **» Dúvidas.**\n> 💳 **» Orçamento.**\n\n⚠️ **⋅ Observação.**\n\nUso inadequado resultará em punição.`,
-            image: {
-                url: 'https://media.discordapp.net/attachments/803751212511526963/804752744606466078/advancement.png?width=432&height=86'
-            },
+            title: ':man_astronaut: Deseja adquirir um dos nossos serviços?',
+            description: `Contamos com uma equipe bem formada para fornecer um ótimo trabalho.\n\n:shopping_cart: **Qual dos nossos serviços você deseja adquirir?**\nVeja abaixo as categorias disponíveis de serviços.\n\n:one: Designer\n:two: Construções\n:three: Desenvolvimento\n\nLeia atentamente o canal <#782062328464146462> e <#807379434701193246> antes de efetuar um pedido de serviço.\n\nReaja ao **emoji** abaixo correspondente ao serviço que você deseja!`,
             color: '#4895EF'
         }
 
@@ -26,8 +20,9 @@ module.exports = async (client) => {
         client.channels.cache.get('807325945282166824').bulkDelete(100)
 
         var msg = await client.channels.cache.get('807325945282166824').send({ embed: embed })
-        msg.react('😭')
-        await msg.react('💳')
+        var emotes = ["1️⃣", "2️⃣", "3️⃣"]
+        
+        for(let i in emotes) msg.react(emotes[i])
 
         async function messages(channel, react, area) {
 
@@ -44,7 +39,10 @@ module.exports = async (client) => {
 
         }
 
-        messages("808444826399145994", "👋", "Designer")
+        messages("809828302310604800", "👋", "Designer")
+        messages("807376703366103050", "👋", "Desenvolvedor")
+        messages("808461854477254696", "👋", "Construtor")
+
         //Adicione a linha a cima para caso queira adicionar novos formulários.
 
     })

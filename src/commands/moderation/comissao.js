@@ -9,11 +9,9 @@ module.exports = {
         if(!message.member.hasPermission('ADMINISTRATOR')) return message.reply('Você não tem permissão de utilizar este comando.')
 
         var embed = {
-            author: {
-                name: `Quem será o cliente?`,
-                icon_url: message.guild.iconURL()
-            },
-            color: '#4895EF',
+            title: ':astronaut: Pergunta #1',
+            description: `Quem será o cliente?`,
+            color: '#4895EF'
         }
         
         var msg = await message.reply({ embed: embed })
@@ -28,11 +26,9 @@ module.exports = {
             if(!membro) return message.reply('Você não inseriu nenhum membro válido.')
 
             var embed = {
-                author: {
-                    name: `Envie um exemplo do que deseja. (Imagem)`,
-                    icon_url: message.guild.iconURL()
-                },
-                color: '#4895EF',
+                title: ':man_scientist: Pergunta #2',
+                description: 'Faça um texto detalhando o seu pedido.',
+                color: '#4895EF'
             }
             
             var msg1 = await message.reply({ embed: embed })
@@ -42,13 +38,11 @@ module.exports = {
                 msg.channel.bulkDelete(2)
 
                 var embed = {
-                    author: {
-                        name: `Forneça-os os detalhes do pedido.`,
-                        icon_url: message.guild.iconURL()
-                    },
-                    color: '#4895EF',
+                    title: ':man_scientist: Pergunta #3',
+                    description: 'Qual será o orçamento máximo para essa comissão?',
+                    color: '#4895EF'
                 }
-                
+
                 var msg2 = await message.reply({ embed: embed })
                 collector = msg.channel.createMessageCollector(filtro, { max: 1 })
                 collector.on('collect', async (msg2) => {
@@ -56,11 +50,9 @@ module.exports = {
                     msg.channel.bulkDelete(2)
 
                     var embed = {
-                        author: {
-                            name: `Qual será o prazo máximo para conclusão desta comissão?`,
-                            icon_url: message.guild.iconURL()
-                        },
-                        color: '#4895EF',
+                        title: ':man_scientist: Pergunta #4',
+                        description: 'Qual prazo máximo para que essa comissão seja concluida?',
+                        color: '#4895EF'
                     }
                     
                     var msg3 = await message.reply({ embed: embed })
@@ -70,11 +62,9 @@ module.exports = {
                         msg.channel.bulkDelete(2)
         
                         var embed = {
-                            author: {
-                                name: `Qual o valor máximo que o cliente deseja pagar?`,
-                                icon_url: message.guild.iconURL()
-                            },
-                            color: '#4895EF',
+                            title: ':man_scientist: Pergunta #5',
+                            description: 'Envie-nos um exemplo do que você deseja.',
+                            color: '#4895EF'
                         }
                         
                         var msg4 = await message.reply({ embed: embed })
@@ -84,8 +74,8 @@ module.exports = {
                             msg.channel.bulkDelete(2)
 
                             var embed = {
-                                title: ':man_astronaut: Qual dessas categorias representa esse serviço?',
-                                description: ':one: Designer\n:two: Construções\n:three: Desenvolvimento',
+                                title: '👨‍🚀 Qual das seguintes categorias representa esse serviço?',
+                                description: 'Escolha uma das categorias disponíveis abaixo.\n\n:one: Designer\n:two: Construções\n:three: Desenvolvimento\n\nReaja ao **emoji** correspondente a categoria que representa esse serviço.',
                                 color: '#4895EF'
                             }
 
@@ -99,75 +89,131 @@ module.exports = {
 
                             collector.on('collect', async (r, u) => {
 
+                                msg5.delete()
+
                                 switch(r.emoji.name) {
 
                                     case "1️⃣":
 
-                                        var servidor = client.guilds.cache.get('ID DO SERVIDOR')
+                                        var servidor = client.guilds.cache.get('807330861274890271')
 
-                                        var canal = await servidor.channels.create(`pedido-${message.author.username}`, { type: 'text', parent: '784775232790462494' })
+                                        var canal = await servidor.channels.create(`pedido-${membro.user.username}`, { type: 'text', parent: '807336183365500999' })
             
                                         var embed = {
                                             title: ':man_mechanic: Informações da comissão:',
-                                            description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                            description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${membro}\nAdministrador: ${message.author}\n\nDetalhes do pedido:\n${msg1.content}\n\nExemplo:\n${msg4.content}\n\nOrçamento máximo: ${msg2.content}\nPrazo **máximo** para entrega: ${msg3.content}`,
                                             color: '#4895EF'
                                         }
             
-                                        message.reply('Pedido enviado com sucesso.')
-            
                                         canal.send({ embed: embed })
-                                        canal.send('804514886347653171').then(msg => msg.delete({ timeout: 5000 }))
+                                        var embed = {
+                                            title: ':man_astronaut: Pedido enviado com sucesso!',
+                                            description: 'Registramos o seu pedido para os nossos freelancers. Aguarde por um lance.',
+                                            color: '#4895EF'
+                                        }
+
+                                        message.reply({ embed: embed })
+
+                                        var embed = {
+                                            title: ':man_scientist: Utilize os seguintes comandos para dar seu lance:',
+                                            description: `-lance <valor> <dias>\n\nVeja algumas **informações** adicionais:\n\nd = dias\ns = semanas\nm = meses\n\n:man_astronaut: **Tutorial exemplificativo:**\n\nExemplo de **comando** de lance: -lance 10 1s\nO lance acima está no valor de 10R$ e o prazo para entrega é de 1 semana.`,
+                                            color: '#4895EF'
+                                        }
+
+                                        canal.send({ embed: embed })
+                                        canal.send('<@&807337791590498345>').then(msg => msg.delete({ timeout: 5000 }))
             
                                         database.ref(`Solicitações/${canal.id}`).set({
                                             user: membro.id,
-                                            canal: message.channel.id
+                                            canal: message.channel.id,
+                                            detalhes: msg1.content,
+                                            orçamento: msg2.content,
+                                            prazo: msg3.content,
+                                            exemplo: msg4.content,
+                                            adm: message.author.id
                                         })
 
                                     break;
                                     case "2️⃣":
 
-                                        var servidor = client.guilds.cache.get('ID DO SERVIDOR')
+                                        var servidor = client.guilds.cache.get('807340735585583135')
 
-                                        var canal = await servidor.channels.create(`pedido-${message.author.username}`, { type: 'text', parent: '784775232790462494' })
+                                        var canal = await servidor.channels.create(`pedido-${message.author.username}`, { type: 'text', parent: '807340735929253938' })
             
                                         var embed = {
                                             title: ':man_mechanic: Informações da comissão:',
-                                            description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                            description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${membro}\nAdministrador: ${message.author}\n\nDetalhes do pedido:\n${msg1.content}\n\nExemplo:\n${msg4.content}\n\nOrçamento máximo: ${msg2.content}\nPrazo **máximo** para entrega: ${msg3.content}`,
                                             color: '#4895EF'
                                         }
             
-                                        message.reply('Pedido enviado com sucesso.')
-            
                                         canal.send({ embed: embed })
-                                        canal.send('804514886347653171').then(msg => msg.delete({ timeout: 5000 }))
+                                        var embed = {
+                                            title: ':man_astronaut: Pedido enviado com sucesso!',
+                                            description: 'Registramos o seu pedido para os nossos freelancers. Aguarde por um lance.',
+                                            color: '#4895EF'
+                                        }
+
+                                        message.reply({ embed: embed })
+
+                                        var embed = {
+                                            title: ':man_scientist: Utilize os seguintes comandos para dar seu lance:',
+                                            description: `-lance <valor> <dias>\n\nVeja algumas **informações** adicionais:\n\nd = dias\ns = semanas\nm = meses\n\n:man_astronaut: **Tutorial exemplificativo:**\n\nExemplo de **comando** de lance: -lance 10 1s\nO lance acima está no valor de 10R$ e o prazo para entrega é de 1 semana.`,
+                                            color: '#4895EF'
+                                        }
+
+                                        canal.send({ embed: embed })
+                                        canal.send('<@&807337791590498345>').then(msg => msg.delete({ timeout: 5000 }))
             
                                         database.ref(`Solicitações/${canal.id}`).set({
                                             user: membro.id,
-                                            canal: message.channel.id
+                                            canal: message.channel.id,
+                                            detalhes: msg1.content,
+                                            orçamento: msg2.content,
+                                            prazo: msg3.content,
+                                            exemplo: msg4.content,
+                                            adm: message.author.id
                                         })
 
 
                                     break;
                                     case "3️⃣":
 
-                                        var servidor = client.guilds.cache.get('ID DO SERVIDOR')
+                                        var servidor = client.guilds.cache.get('807340980684455996')
 
-                                        var canal = await servidor.channels.create(`pedido-${message.author.username}`, { type: 'text', parent: '784775232790462494' })
+                                        var canal = await servidor.channels.create(`pedido-${message.author.username}`, { type: 'text', parent: '807340981220671547' })
             
                                         var embed = {
                                             title: ':man_mechanic: Informações da comissão:',
-                                            description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                            description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${membro}\nAdministrador: ${message.author}\n\nDetalhes do pedido:\n${msg1.content}\n\nExemplo:\n${msg4.content}\n\nOrçamento máximo: ${msg2.content}\nPrazo **máximo** para entrega: ${msg3.content}`,
                                             color: '#4895EF'
                                         }
             
-                                        message.reply('Pedido enviado com sucesso.')
-            
                                         canal.send({ embed: embed })
-                                        canal.send('804514886347653171').then(msg => msg.delete({ timeout: 5000 }))
+                                        var embed = {
+                                            title: ':man_astronaut: Pedido enviado com sucesso!',
+                                            description: 'Registramos o seu pedido para os nossos freelancers. Aguarde por um lance.',
+                                            color: '#4895EF'
+                                        }
+
+                                        message.reply({ embed: embed })
+
+                                        var embed = {
+                                            title: ':man_scientist: Utilize os seguintes comandos para dar seu lance:',
+                                            description: `-lance <valor> <dias>\n\nVeja algumas **informações** adicionais:\n\nd = dias\ns = semanas\nm = meses\n\n:man_astronaut: **Tutorial exemplificativo:**\n\nExemplo de **comando** de lance: -lance 10 1s\nO lance acima está no valor de 10R$ e o prazo para entrega é de 1 semana.`,
+                                            color: '#4895EF'
+                                        }
+
+                                        canal.send({ embed: embed })
+                                        canal.send('<@&807337791590498345>').then(msg => msg.delete({ timeout: 5000 }))
             
                                         database.ref(`Solicitações/${canal.id}`).set({
                                             user: membro.id,
-                                            canal: message.channel.id
+                                            canal: message.channel.id,
+                                            detalhes: msg1.content,
+                                            orçamento: msg2.content,
+                                            prazo: msg3.content,
+                                            exemplo: msg4.content,
+                                            adm: message.author.id
                                         })
 
                                     break;

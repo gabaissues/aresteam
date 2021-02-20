@@ -17,7 +17,14 @@ module.exports = (client) => {
             if (Cooldown.has(u.id)) {
 
                 r.users.remove(u.id)
-                u.send('Você tem que esperar três minutos para que possa abrir outro ticket, por favor, espere.').catch(err => { return });
+
+                var embed = {
+                    title: ':clock1: Espere alguns minutos!',
+                    description: 'Você precisa esperar três minutos para requisitar outro serviço.',
+                    color: '#4895EF'
+                }
+
+                u.send({ embed: embed }).catch(err => { return });
 
             } else {
 
@@ -87,17 +94,25 @@ module.exports = (client) => {
 
                 ticket('😭', 'Dùvida', '804514886347653171')
 
-                if (r.emoji.name === "💳") {
+                if (r.emoji.name === "1️⃣" || r.emoji.name === "2️⃣" || r.emoji.name === "3️⃣") {
 
                     r.users.remove(u.id)
 
                     Cooldown.add(u.id)
 
-                    var canal = await r.message.guild.channels.create(`atendimento-${u.tag}`, { parent: '784775232790462494' })//Esse ID é o da categoria no qual vai ficar os tickets.
+                    var canal = await r.message.guild.channels.create(`atendimento-${u.username}`, { parent: '784775232790462494' })//Esse ID é o da categoria no qual vai ficar os tickets.
 
                     canal.updateOverwrite(r.message.guild.roles.everyone, { "SEND_MESSAGES": true, "ATTACH_FILES": true, "VIEW_CHANNEL": false })
                     canal.updateOverwrite(u.id, { "VIEW_CHANNEL": true })
                     canal.updateOverwrite(r.message.guild.roles.cache.get('782062081456865298'), { "VIEW_CHANNEL": true })
+
+                    var embed = {
+                        title: ':astronaut: Obrigado por criar uma comissão conosco!',
+                        description: `Responda todas as perguntas que fizermos para concluir o processo de pedido.\n\nCaso você esteja em dúvida sobre esse processo de pedido, você pode fazer uma leitura em nosso canal <#809823664849682452>\n\nDesejamos um **ótimo** trabalho! :wave:`,
+                        color: '#4895EF'
+                    }
+                    
+                    canal.send({ embed: embed })
 
                     var embed = {
                         title: ':man_scientist: Pergunta #1',
@@ -168,7 +183,7 @@ module.exports = (client) => {
 
                                     var embed = {
                                         title: '🧑‍🔧 **Escolha o administrador dessa comissão.**',
-                                        description: `Abaixo está listado todos os administradores disponíveis para revisar sua comissão: \n\n1️⃣ <@${array[0] || "Indisponivel."}>\n2️⃣ <@${array[1] || "Indisponivel."}>\n3️⃣ <@${array[2] || "Indisponivel."}>\n4️⃣ <@${array[3] || "Indisponivel."}>\n5️⃣ <@${array[4] || "Indisponivel."}>\n6️⃣ <@${array[5] || "Indisponivel."}>\n7️⃣ <@${array[6] || "Indisponivel."}>\n8️⃣ <@${array[7] || "Indisponivel."}>\n9️⃣ <@${array[8] || "Indisponivel."}>\n🔟 <@${array[9] || "Indisponivel."}>\n\n:man_scientist: Reaja com o **emoji** abaixo correspondente ao administrador que você deseja que revise sua comissão.`,
+                                        description: `Abaixo está listado todos os administradores disponíveis para revisar sua comissão: \n\n1️⃣ <@${array[0] || "Indisponivel"}>\n2️⃣ <@${array[1] || "Indisponivel"}>\n3️⃣ <@${array[2] || "Indisponivel"}>\n4️⃣ <@${array[3] || "Indisponivel"}>\n5️⃣ <@${array[4] || "Indisponivel"}>\n6️⃣ <@${array[5] || "Indisponivel"}>\n7️⃣ <@${array[6] || "Indisponivel"}>\n8️⃣ <@${array[7] || "Indisponivel"}>\n9️⃣ <@${array[8] || "Indisponivel"}>\n🔟 <@${array[9] || "Indisponivel"}>\n\n:man_scientist: Reaja com o **emoji** abaixo correspondente ao administrador que você deseja que revise sua comissão.`,
                                         color: '#4895EF'
                                     }
 
@@ -178,7 +193,7 @@ module.exports = (client) => {
                                     for (let i in emotes) await msg4.react(emotes[i])
 
                                     var filtro = (reaction, user) => user.id === msg2.author.id
-                                    collector = msg4.createReactionCollector(filtro, { max: 1 })
+                                    collector = msg4.createReactionCollector(filtro)
 
                                     collector.on('collect', async (reaction, user) => {
 
@@ -186,94 +201,152 @@ module.exports = (client) => {
 
                                             case emotes[0]:
 
+                                                if(!array[0]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido: ${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido: ${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    title: '👩‍🚀 Perguntas respondidas com sucesso!',
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    color: '#4895EF'
+                                                }
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[0]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[1]:
 
+                                                if(!array[1]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[1]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    title: '👩‍🚀 Perguntas respondidas com sucesso!',
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    color: '#4895EF'
+                                                }
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[1]}>`).then(msg => msg.delete({ timeout: 5000 }))
                                                 break;
                                             case emotes[2]:
 
+                                                if(!array[2]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[2]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    title: '👩‍🚀 Perguntas respondidas com sucesso!',
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    color: '#4895EF'
+                                                }
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[2]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[3]:
 
+                                                if(!array[3]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[3]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    title: '👩‍🚀 Perguntas respondidas com sucesso!',
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    color: '#4895EF'
+                                                }
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[3]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[4]:
 
+                                                if(!array[4]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[4]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    title: '👩‍🚀 Perguntas respondidas com sucesso!',
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    color: '#4895EF'
+                                                }
+                                                canal.send({ embed: embed })
+
                                                 canal.send(`<@${array[4]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[5]:
 
+                                                if(!array[5]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[5]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    title: '👩‍🚀 Perguntas respondidas com sucesso!',
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    color: '#4895EF'
+                                                }
+                                                canal.send({ embed: embed })
+
                                                 canal.send(`<@${array[5]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[6]:
 
+                                                if(!array[6]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[6]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -283,11 +356,13 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[7]:
 
+                                                if(!array[7]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[7]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -297,11 +372,13 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[8]:
 
+                                                if(!array[8]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[8]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -311,11 +388,13 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[9]:
 
+                                                if(!array[9]) return;
+
                                                 msg.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente todas as informações do pedido.\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[9]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -325,6 +404,12 @@ module.exports = (client) => {
                                                 break;
 
                                         }
+
+                                        setTimeout(() => {
+
+                                            Cooldown.delete(u.id)
+
+                                        }, 180000)
 
                                     })
 

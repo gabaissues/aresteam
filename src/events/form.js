@@ -246,7 +246,9 @@ module.exports = (client) => {
 
             //form("142141414214", "4124214214", "45124124214214") (EXEMPLO DE COMO DEVE FICAR)
             //form("Canal que aparece fica a mensagem para o usuário reagir", "Categoria que aparece os formulários", "Cargo que pode ver os formulários")
-            form("808444826399145994", "807349149765992489", "807338010436960357")
+            form("809828302310604800", "807349149765992489", "807338010436960357")
+            form("807376703366103050", "807376656007430204", "807340980696121355")
+            form("808461854477254696", "807376752317169694", "807340735740379148")
 
         }
 

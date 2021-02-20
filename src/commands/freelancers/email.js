@@ -6,8 +6,13 @@ module.exports = {
     aliases: ['email', 'e-mail'],
     run: async(client, message, args) => {
 
-        if(!args[0]) return message.reply('Você utilizou o comando **incorretamente**. Utilize: -e-mail <método de pagamento> <endereço>')
-        if(!args[1]) return message.reply(`Você utilizou o comando **incorretamente**. Utilize: -e-mail ${args[0]} <endereço>`)
+        var embed = {
+            title: ':man_scientist: Comando inválido!',
+            description: `Você não inseriu algumas informações. Utilize: -e-mail <endereço>`,
+            color: "RED"
+        }
+
+        if(!args[0]) return message.reply({ embed: embed })
 
         const user = await database.ref(`Perfils/${message.author.id}`).once('value')
         if(user.val() === null) {
@@ -15,21 +20,31 @@ module.exports = {
             database.ref(`Perfils/${message.author.id}`).set({
                 portfolio: 'Não definido.',
                 avalia: 0,
-                email: `${args.slice(1).join(' ')}`,
-                metodo: args[0],
+                email: args[0],
                 recebido: 0
             })
     
-            message.reply('E-mail definido com **sucesso**!')    
+            var embed = {
+                title: ':man_astronaut: E-mail definido com sucesso!',
+                description: `Parabéns, você acabou de definir seu e-mail. Agora você está livre para ofertar pedidos.`,
+                color: "#4895EF"
+            }
+
+            message.reply({ embed: embed })
 
         } else {
 
             database.ref(`Perfils/${message.author.id}`).update({
-                email: `${args.slice(1).join(' ')}`,
-                metodo: args[0]
+                email: args[0]
             })
     
-            message.reply('E-mail definido com **sucesso**!')    
+            var embed = {
+                title: ':man_astronaut: E-mail definido com sucesso!',
+                description: `Parabéns, você acabou de definir seu e-mail. Agora você está livre para ofertar pedidos.`,
+                color: "#4895EF"
+            }
+
+            message.reply({ embed: embed })
 
         }
     }
