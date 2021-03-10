@@ -75,7 +75,7 @@ module.exports = {
 
                             var embed = {
                                 title: '👨‍🚀 Qual das seguintes categorias representa esse serviço?',
-                                description: 'Escolha uma das categorias disponíveis abaixo.\n\n:one: Designer\n:two: Construções\n:three: Desenvolvimento\n\nReaja ao **emoji** correspondente a categoria que representa esse serviço.',
+                                description: 'Escolha uma das categorias disponíveis abaixo:\n\n:one: Designer\n:two: Construções\n:three: Desenvolvimento\n\nReaja ao **emoji** correspondente a categoria que representa esse serviço!',
                                 color: '#4895EF'
                             }
 
@@ -108,7 +108,7 @@ module.exports = {
                                         canal.send({ embed: embed })
                                         var embed = {
                                             title: ':man_astronaut: Pedido enviado com sucesso!',
-                                            description: 'Registramos o seu pedido para os nossos freelancers. Aguarde por um lance.',
+                                            description: 'Registramos o seu pedido para os nossos(as) membros da Equipe Ares. Aguarde por um lance.',
                                             color: '#4895EF'
                                         }
 
@@ -149,7 +149,7 @@ module.exports = {
                                         canal.send({ embed: embed })
                                         var embed = {
                                             title: ':man_astronaut: Pedido enviado com sucesso!',
-                                            description: 'Registramos o seu pedido para os nossos freelancers. Aguarde por um lance.',
+                                            description: 'Registramos o seu pedido para os nossos(as) membros da Equipe Ares. Aguarde por um lance.',
                                             color: '#4895EF'
                                         }
 
@@ -162,7 +162,7 @@ module.exports = {
                                         }
 
                                         canal.send({ embed: embed })
-                                        canal.send('<@&807337791590498345>').then(msg => msg.delete({ timeout: 5000 }))
+                                        canal.send('<@&807340735740379146>').then(msg => msg.delete({ timeout: 5000 }))
             
                                         database.ref(`Solicitações/${canal.id}`).set({
                                             user: membro.id,
@@ -191,7 +191,7 @@ module.exports = {
                                         canal.send({ embed: embed })
                                         var embed = {
                                             title: ':man_astronaut: Pedido enviado com sucesso!',
-                                            description: 'Registramos o seu pedido para os nossos freelancers. Aguarde por um lance.',
+                                            description: 'Registramos o seu pedido para os nossos(as) membros da Equipe Ares. Aguarde por um lance.',
                                             color: '#4895EF'
                                         }
 
@@ -204,7 +204,7 @@ module.exports = {
                                         }
 
                                         canal.send({ embed: embed })
-                                        canal.send('<@&807337791590498345>').then(msg => msg.delete({ timeout: 5000 }))
+                                        canal.send('<@&807340980684456005>').then(msg => msg.delete({ timeout: 5000 }))
             
                                         database.ref(`Solicitações/${canal.id}`).set({
                                             user: membro.id,

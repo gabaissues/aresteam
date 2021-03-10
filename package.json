@@ -6,6 +6,8 @@
   "dependencies": {
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
-    "mercadopago": "^1.5.3"
+    "firebase": "^8.2.9",
+    "mercadopago": "^1.5.3",
+    "moment": "^2.29.1"
   }
 }

@@ -1,5 +1,6 @@
 const Discord = require('discord.js')
 const Cooldown = new Set()
+const moment = require('moment')
 const { database } = require('../services/firebase.js')
 
 module.exports = (client) => {
@@ -109,120 +110,210 @@ module.exports = (client) => {
 
                                             case emotes[0]:
 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[0]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[0]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[1]:
+
+                                                canal.bulkDelete(100)
                                                 
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[1]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[1]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[2]:
                                                 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[2]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[2]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[3]:
                                                 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[3]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[3]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[4]:
                                                 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[4]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[4]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[5]:
                                                 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[5]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[5]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[6]:
-                                                
+                                            
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[6]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[6]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[7]:
                                                 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[7]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[7]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[8]:
                                                 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[8]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[8]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                             break;
                                             case emotes[9]:
                                                 
+                                                canal.bulkDelete(100)
+
                                                 var embed = {
-                                                    title: ':woman_astronaut: **Perguntas respondidas com sucesso!**',
-                                                    description: `Obrigado! Aguarde o responsável pela aplicação desse pedido lhe enviar novas instruções. Lembre-se, ser educado e profissional resultará de forma positiva na sua aplicação.`,
+                                                    title: ':man_astronaut: Informações da aplicação!',
+                                                    description: `Veja abaixo informações dessa aplicação:\n\nUsuário(a): ${u}\nAplicador(a): <@${array[9]}>\n\nAplicação criada em: ${moment(new Date()).format('DD/MM/YYYY')}`,
                                                     color: '#4895EF'
                                                 }
 
+                                                canal.send({ embed: embed })
+
+                                                var embed = {
+                                                    description: `**:man_scientist: Pergunta #1**\nFaça um pequeno texto explicando os motivos pelo qual deseja aplicar-se.\n\nResposta do usuário(a):\n${msg.content}\n\n**:man_scientist: Pergunta #2**\nQual é sua idade?\n\nResposta do usuário(a):\n${msg1.content}\n\n**:man_scientist: Pergunta #3**\nVocê já teve experiência trabalhando em outra equipe? Se sim, qual?\n\nResposta do usuário(a):\n${msg2.content}\n\n**:man_scientist: Pergunta #4**\nEnvie-nos o seu portfólio:\n\nResposta do usuário(a):\n${msg3.content}`,
+                                                    color: '#4895EF'
+                                                }
+                                                
                                                 canal.send({ embed: embed })
                                                 canal.send(`<@${array[9]}>`).then(msg => msg.delete({ timeout: 5000 }))
 

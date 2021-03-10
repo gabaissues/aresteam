@@ -6,6 +6,9 @@ module.exports = {
     aliases: ['fechar', 'finalizar'],
     run: async (client, message, args) => {
 
+        if(!message.member.hasPermission('ADMINISTRATOR')) return;
+        const snap = await database.ref(`Perfils/${message.author.id}`).once('value')  
+                                                
         var embed = {
             title: ':man_scientist: Pergunta #1',
             description: 'Quem foi o cliente desse serviço?',
@@ -134,7 +137,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -150,38 +153,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 1,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 1,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣\n\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣Avaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor **total** da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -189,7 +199,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -197,7 +207,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -259,7 +269,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -275,38 +285,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 2,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 1,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣\n\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣Avaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor **total** da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -314,7 +331,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -322,7 +339,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -384,7 +401,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -400,38 +417,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 3,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 1,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣\n\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣Avaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor **total** da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -439,7 +463,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -447,7 +471,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -509,7 +533,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -525,38 +549,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 4,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 1,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣\n\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣Avaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor **total** da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -564,7 +595,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -572,7 +603,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -634,7 +665,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -650,38 +681,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 5,
+                                              recebido: data[0].valor + user.val().recebido+(user.val().recebido)
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 1,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣\n\nAvaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 1️⃣Avaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor **total** da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -689,7 +727,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -697,7 +735,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -805,7 +843,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -821,38 +859,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 1,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 2,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\n\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -860,7 +905,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -868,7 +913,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -930,7 +975,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -946,38 +991,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 2,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 2,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -985,7 +1037,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -993,7 +1045,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1055,7 +1107,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1071,38 +1123,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 3,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 2,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1110,7 +1169,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -1118,7 +1177,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1180,7 +1239,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1196,38 +1255,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 4,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 2,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1235,7 +1301,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -1243,7 +1309,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1305,7 +1371,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1321,38 +1387,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 5,
+                                              recebido: data[0].valor + user.val().recebido+(user.val().recebido)
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 2,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :two:\nAvaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1360,7 +1433,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -1368,7 +1441,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1476,7 +1549,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1492,38 +1565,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 1,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 3,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\n\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1531,7 +1611,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -1539,7 +1619,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1601,7 +1681,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1617,38 +1697,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 2,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 3,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1656,7 +1743,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -1664,7 +1751,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1726,7 +1813,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1742,38 +1829,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 3,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 3,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1781,7 +1875,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -1789,7 +1883,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1851,7 +1945,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1867,38 +1961,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 4,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 3,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1906,7 +2007,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -1914,7 +2015,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -1976,7 +2077,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -1992,38 +2093,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 5,
+                                              recebido: data[0].valor + user.val().recebido+(user.val().recebido)
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 3,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :three:\nAvaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2031,7 +2139,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -2039,7 +2147,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2147,7 +2255,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -2163,38 +2271,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 1,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 4,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\n\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2202,7 +2317,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -2210,7 +2325,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2272,7 +2387,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -2288,38 +2403,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 2,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 4,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2327,7 +2449,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -2335,7 +2457,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2397,7 +2519,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -2413,38 +2535,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 3,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 4,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2452,7 +2581,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -2460,7 +2589,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2522,7 +2651,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -2538,38 +2667,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 4,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 4,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2577,7 +2713,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -2585,7 +2721,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2647,7 +2783,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -2663,38 +2799,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 5,
+                                              recebido: data[0].valor + user.val().recebido+(user.val().recebido)
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 4,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :four:\nAvaliação do(a) criador(a) do produto: ${membro} - :five:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2702,7 +2845,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -2710,7 +2853,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2818,7 +2961,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -2834,38 +2977,46 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 1,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 5,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
+                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\n\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\nAvaliação do(a) criador(a) do produto: ${membro} - 1️⃣\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2873,7 +3024,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -2881,7 +3032,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2943,7 +3094,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -2959,38 +3110,46 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 2,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 5,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
+                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\nAvaliação do(a) criador(a) do produto: ${membro} - :two:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -2998,7 +3157,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -3006,7 +3165,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -3068,7 +3227,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -3084,38 +3243,46 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 3,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 5,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
+                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\nAvaliação do(a) criador(a) do produto: ${membro} - :three:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -3123,7 +3290,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -3131,7 +3298,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -3193,7 +3360,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -3209,38 +3376,47 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 4,
+                                              recebido: data[0].valor + user.val().recebido
+                                            })
+
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 5,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
+                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+                                  
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\n\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - :five:\nAvaliação do(a) criador(a) do produto: ${membro} - :four:\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -3248,7 +3424,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -3256,7 +3432,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -3318,7 +3494,7 @@ module.exports = {
                                             setTimeout(() => {
 
                                                 message.channel.delete()
-                                                database.ref(`Solicitações/${data[0].canal}`).delete()
+                                                database.ref(`Solicitações/${data[0].canal}`).remove()
 
                                             }, 3600000)
 
@@ -3334,38 +3510,45 @@ module.exports = {
                                             let adm = (taxa * 15) / 100
                                             let ares = (data[0].taxa-adm)
 
-                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-
                                             console.log(ares)
 
                                             ares = ares.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 
                                             var embed = {
                                                 title: ':shopping_cart: Comissão concluida com sucesso!',
-                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\nValor que irá receber: ${adm}\n\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
+                                                description: `Leia atentamente as informações abaixo.\n\nUsuário(a): ${membro}\nAdministrador: ${message.author}\nCliente: ${client}\nValor **total** da comissão: ${total}\n\n**:man_astronaut: Informações do(a) usuário(a):**\n\nE-mail: ${user.val().email}\nMétodo de pagamento: ${user.val().metodo}\n${user.val().chave ? `Chave PIX: ${user.val().chave}\n` : ''}Valor que irá receber: ${freelancer}\n\n**:man_scientist:  Informações do(a) administrador(a):**\n\nEmail: ${snap.val().email}\nMétodo de pagamento: ${snap.val().metodo}\nValor que irá receber: ${adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\n${snap.val().chave ? `Chave PIX: ${snap.val().chave}\n` : ''}\n**:man_mage: Informações da Ares Team:**\nComissão concluída com sucesso.\n\nValor recebido para Ares Team: ${ares}\n\nReaja ao **emoji** abaixo se o pagamento foi efetuado!`,
                                                 color: '#4895EF'
                                             }
 
                                             var msg6 = await message.guild.channels.cache.get('809824224562380820').send({ embed: embed })
                                             msg6.react('👍')
 
+                                            database.ref(`Perfils/${membro.id}`).update({
+                                              avalia: 5,
+                                              recebido: data[0].valor + user.val().recebido+(user.val().recebido)
+                                            })
+                                            database.ref(`Perfils/${message.author.id}`).update({
+                                              avalia: 5,
+                                              recebido: snap.val().recebido + adm
+                                            })
+
+                                            adm = adm.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
                                             var rfiltro = (r, u) => r.message.guild.members.cache.get(u.id).roles.cache.has("782062081456865298")
 
                                             collector = msg6.createReactionCollector(rfiltro, { max: 1 })
                                             collector.on('collect', async (r, u) => {
 
-                                                const snap = await database.ref(`Perfils/${membro.id}`).once('value')
                                                 msg6.delete()
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${adm}\nMétodo de pagamento: ${snap.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 
                                                 var embed = {
                                                     title: ':man_astronaut: Comissão concluida!',
-                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 5️⃣\n\nAvaliação do(a) criador(a) do produto: ${membro} - 5️⃣\n\nValor total da comissão: ${msg5.content}`,
+                                                    description: `Veja abaixo informações dessa comissão:\n\nAvaliação da administração: ${message.author} - 5️⃣\nAvaliação do(a) criador(a) do produto: ${membro} - 5️⃣\n\nValor total da comissão: ${total.toLocaleString('pt-br', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}`,
                                                     color: '#4895EF'
                                                 }
 
@@ -3373,7 +3556,7 @@ module.exports = {
                                                 
                                                 var embed = {
                                                     title: ':man_astronaut: Pagamento efetuado com sucesso!',
-                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\n\nE-mail: ${snap.val().email}`,
+                                                    description: `Essa comissão já foi paga com sucesso.\n\n:shopping_cart: **Informações adicionais:**\n\nUsuário(a): ${membro}\nE-mail: ${user.val().email}\n\nAdministrador(a): ${message.author}\nE-mail: ${snap.val().email}`,
                                                     color: 'GREEN'
                                                 }
                                                 
@@ -3381,7 +3564,7 @@ module.exports = {
 
                                                 var embed = {
                                                     title: ':man_astronaut: Você acaba de receber um pagamento!',
-                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
+                                                    description: `Você recebeu um pagamento. Veja algumas informações abaixo:\n\n:shopping_cart: Comissão de ${client.user.username}:\n\nValor recebido: ${freelancer}\nMétodo de pagamento: ${user.val().metodo}`,
                                                     color: '#4895EF'
                                                 }
 

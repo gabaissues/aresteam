@@ -6,6 +6,8 @@ module.exports = {
     aliases: ['pagamentos'],
     run: async(client, message, args) => {
 
+        const user = await database.ref(`Perfils/${message.author.id}`).once('value')
+
         var embed = {
             title: ':shopping_cart: Metódos de pagamento!',
             description: `Veja abaixo os métodos de pagamento:\n\n:one: - Mercado Pago\n:two: - PayPal\n:three: - PIX\n\nReaja ao emoji abaixo correspondente ao método de pagamento que você deseja.`,
@@ -25,6 +27,16 @@ module.exports = {
 
                 case "1️⃣":
 
+                    if(user.val() === null) {
+
+                        database.ref(`Perfils/${message.author.id}`).set({
+                            portfolio: 'MercadoPago',
+                            avalia: 0,
+                            recebido: 0
+                        })
+
+                    }
+
                     database.ref(`Perfils/${message.author.id}`).update({
                         metodo: 'Mercado Pago'
                     })
@@ -39,6 +51,16 @@ module.exports = {
 
                 break;
                 case "2️⃣":
+
+                    if(user.val() === null) {
+
+                        database.ref(`Perfils/${message.author.id}`).set({
+                            metodo: 'PayPal',
+                            avalia: 0,
+                            recebido: 0
+                        })
+
+                    }
 
                     database.ref(`Perfils/${message.author.id}`).update({
                         metodo: 'PayPal'
@@ -66,6 +88,17 @@ module.exports = {
 
                     collector = msg1.channel.createMessageCollector(filtro, { max: 1 })
                     collector.on('collect', async (msg1) => {
+
+                        if(user.val() === null) {
+
+                            database.ref(`Perfils/${message.author.id}`).set({
+                                metodo: 'PIX',
+                                chave: msg1.content,
+                                avalia: 0,
+                                recebido: 0
+                            })
+    
+                        }
 
                         database.ref(`Perfils/${message.author.id}`).update({
                             metodo: 'PIX',

@@ -28,72 +28,6 @@ module.exports = (client) => {
 
             } else {
 
-                async function ticket(react, name, role) {
-
-                    if (r.emoji.name === react) {
-
-                        r.users.remove(u.id)
-
-                        Cooldown.add(u.id)
-
-                        var canal = await r.message.guild.channels.create(`${name}-${u.tag}`, { parent: '784775232790462494' })//Esse ID é o da categoria no qual vai ficar os tickets.
-
-                        canal.updateOverwrite(r.message.guild.roles.everyone, { "SEND_MESSAGES": true, "ATTACH_FILES": true, "VIEW_CHANNEL": false })
-                        canal.updateOverwrite(u.id, { "VIEW_CHANNEL": true })
-                        canal.updateOverwrite(r.message.guild.roles.cache.get(role), { "VIEW_CHANNEL": true })
-
-                        var embed = {
-                            author: {
-                                name: `Sistema de atendimento ⋅ ${name}.`,
-                                icon_url: r.message.guild.iconURL()
-                            },
-                            description: `Olá! Seja bem-vindo(a) ao nosso sistema de atendimento. Para que possamos solucionar seu problema seja o mais específico possível, procure expor sua dúvida/problema de forma clara e objetiva.\n\nLembrando, envie o assunto o quanto antes para que a nossa equipe consiga ajudá-lo(a). **Uso inadequado resultará em punição.**`,
-                            image: {
-                                url: 'https://media.discordapp.net/attachments/803751212511526963/804752744606466078/advancement.png?width=432&height=86'
-                            },
-                            footer: {
-                                text: 'Caso queira finalizar o canal, clique em 🔒'
-                            },
-                            color: '#4895EF'
-                        }
-
-                        canal.send(`${u}`).then(msg => msg.delete({ timeout: 5000 }))
-                        canal.send(`<@&${role}>`).then(msg => msg.delete({ timeout: 5000 }))
-
-                        var msg = await canal.send({ embed: embed })
-                        msg.react('🔒')
-
-                        var filtro = (reaction, user) => user.id === user.id
-                        collector = msg.createReactionCollector(filtro, { max: 2 })
-
-                        collector.on('collect', async (reaction, user) => {
-
-                            if (reaction.me == true) return;
-
-                            canal.send('Canal sendo deletado dentro de 3 segundos...')
-                            setTimeout(() => {
-
-                                canal.delete()
-                                Cooldown.delete(u.id)
-
-                            }, 3000)
-
-                        })
-
-
-                    }
-
-
-                }
-
-                //A cima, está todo o sistema que está por trás do ticket. Para que não fique com diversas linhas, criei
-                //Uma function no qual você mesma pode adicionar tickets sem problemas. Basta replicar essa linha
-                //A baixo, e adicionar o nome, no caso está dúvida.
-
-                //No terceiro parametro, é o cargo da equipe.
-
-                ticket('😭', 'Dùvida', '804514886347653171')
-
                 if (r.emoji.name === "1️⃣" || r.emoji.name === "2️⃣" || r.emoji.name === "3️⃣") {
 
                     r.users.remove(u.id)
@@ -111,7 +45,7 @@ module.exports = (client) => {
                         description: `Responda todas as perguntas que fizermos para concluir o processo de pedido.\n\nCaso você esteja em dúvida sobre esse processo de pedido, você pode fazer uma leitura em nosso canal <#809823664849682452>\n\nDesejamos um **ótimo** trabalho! :wave:`,
                         color: '#4895EF'
                     }
-                    
+
                     canal.send({ embed: embed })
 
                     var embed = {
@@ -192,8 +126,8 @@ module.exports = (client) => {
 
                                     for (let i in emotes) await msg4.react(emotes[i])
 
-                                    var filtro = (reaction, user) => user.id === msg2.author.id
-                                    collector = msg4.createReactionCollector(filtro)
+                                    var rfiltro = (reaction, user) => user.id === msg2.author.id
+                                    collector = msg4.createReactionCollector(rfiltro)
 
                                     collector.on('collect', async (reaction, user) => {
 
@@ -201,21 +135,33 @@ module.exports = (client) => {
 
                                             case emotes[0]:
 
-                                                if(!array[0]) return;
+                                                if (!array[0]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido: ${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[0]}>\n\nDetalhes do pedido: ${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[0]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
 
                                                 var embed = {
                                                     title: '👩‍🚀 Perguntas respondidas com sucesso!',
-                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos freelancers, converse com o administrador responsável pela revisão desta comissão.`,
                                                     color: '#4895EF'
                                                 }
                                                 canal.send({ embed: embed })
@@ -224,21 +170,33 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[1]:
 
-                                                if(!array[1]) return;
+                                                if (!array[1]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[1]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[1]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[1]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
 
                                                 var embed = {
                                                     title: '👩‍🚀 Perguntas respondidas com sucesso!',
-                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos freelancers, converse com o administrador responsável pela revisão desta comissão.`,
                                                     color: '#4895EF'
                                                 }
                                                 canal.send({ embed: embed })
@@ -246,21 +204,33 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[2]:
 
-                                                if(!array[2]) return;
+                                                if (!array[2]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[2]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[2]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[2]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
 
                                                 var embed = {
                                                     title: '👩‍🚀 Perguntas respondidas com sucesso!',
-                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos freelancers, converse com o administrador responsável pela revisão desta comissão.`,
                                                     color: '#4895EF'
                                                 }
                                                 canal.send({ embed: embed })
@@ -269,21 +239,33 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[3]:
 
-                                                if(!array[3]) return;
+                                                if (!array[3]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[3]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[3]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[3]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
 
                                                 var embed = {
                                                     title: '👩‍🚀 Perguntas respondidas com sucesso!',
-                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos freelancers, converse com o administrador responsável pela revisão desta comissão.`,
                                                     color: '#4895EF'
                                                 }
                                                 canal.send({ embed: embed })
@@ -292,21 +274,33 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[4]:
 
-                                                if(!array[4]) return;
+                                                if (!array[4]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[4]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[4]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[4]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
 
                                                 var embed = {
                                                     title: '👩‍🚀 Perguntas respondidas com sucesso!',
-                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos freelancers, converse com o administrador responsável pela revisão desta comissão.`,
                                                     color: '#4895EF'
                                                 }
                                                 canal.send({ embed: embed })
@@ -316,21 +310,33 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[5]:
 
-                                                if(!array[5]) return;
+                                                if (!array[5]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[5]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[5]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[5]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
 
                                                 var embed = {
                                                     title: '👩‍🚀 Perguntas respondidas com sucesso!',
-                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos designers, converse com o administrador responsável pela revisão desta comissão.`,
+                                                    description: `Obrigado! Para que o seu pedido seja melhor **esclarecido** para os nossos freelancers, converse com o administrador responsável pela revisão desta comissão.`,
                                                     color: '#4895EF'
                                                 }
                                                 canal.send({ embed: embed })
@@ -340,65 +346,113 @@ module.exports = (client) => {
                                                 break;
                                             case emotes[6]:
 
-                                                if(!array[6]) return;
+                                                if (!array[6]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[6]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[6]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[6]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
                                                 canal.send(`<@${array[6]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[7]:
 
-                                                if(!array[7]) return;
+                                                if (!array[7]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[7]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[7]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[7]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
                                                 canal.send(`<@${array[7]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[8]:
 
-                                                if(!array[8]) return;
+                                                if (!array[8]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[8]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[8]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[8]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
                                                 canal.send(`<@${array[8]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
                                             case emotes[9]:
 
-                                                if(!array[9]) return;
+                                                if (!array[9]) return;
 
-                                                msg.channel.bulkDelete(100)
+                                                reaction.message.channel.bulkDelete(100)
 
                                                 var embed = {
                                                     title: '👨‍🔧 Informações da comissão:',
-                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${msg.author}\nAdministrador: <@${array[9]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
+                                                    description: `Leia atentamente abaixo todas as informações do pedido:\n\nCliente: ${u}\nAdministrador: <@${array[9]}>\n\nDetalhes do pedido:\n${msg.content}\n\nExemplo:\n${msg3.content}\n\nOrçamento máximo: ${msg1.content}\nPrazo **máximo** para entrega: ${msg2.content}`,
                                                     color: '#4895EF'
                                                 }
 
-                                                canal.send({ embed: embed })
+                                                var msg5 = await canal.send({ embed: embed })
+
+                                                msg5.react('❌')
+                                                var filtro = (r, u) => u.id === array[9]
+                                                collector = msg5.createReactionCollector(filtro, { max: 1 })
+
+                                                collector.on('collect', async (r) => {
+
+                                                    canal.delete()
+                                                    database.ref(`Solicitações/${canal.id}`).delete()
+
+                                                })
+
                                                 canal.send(`<@${array[9]}>`).then(msg => msg.delete({ timeout: 5000 }))
 
                                                 break;
@@ -420,6 +474,46 @@ module.exports = (client) => {
 
                         })
 
+                    })
+                    
+                    var filtroall = (m) => m.author.id === m.author.id
+
+                    collector = msg.channel.createMessageCollector(filtroall)
+                    collector.on('collect', async (mensagem) => {
+
+                        if(mensagem.author.bot) return;
+
+                        database.ref(`Logs/${mensagem.channel.id}`).once('value').then(async function (searchChannel) {
+
+                            if(searchChannel.val() === null) {
+                                
+                                var embed = {
+                                    title: ':man_astronaut: Mensagem armazenada!',
+                                    description: `Veja a mensagem armazenada abaixo:\n\nAutor: ${mensagem.author}\nMensagem: ${mensagem.content}`,
+                                    color: '#4895EF'
+                                }
+
+                                var canal = await client.guilds.cache.get('812847600050503680').channels.create(`comissão-${u.username}`, { parent: '812847600050503681' })
+                                canal.send({ embed: embed })
+
+                                database.ref(`Logs/${mensagem.channel.id}`).set({
+                                    canalid: canal.id
+                                })
+
+                            } else {
+
+                                var embed = {
+                                    title: ':man_astronaut: Mensagem armazenada!',
+                                    description: `Veja a mensagem armazenada abaixo:\n\nAutor: ${mensagem.author}\nMensagem: ${mensagem.content}`,
+                                    color: '#4895EF'
+                                }
+
+                                client.guilds.cache.get('812847600050503680').channels.cache.get(searchChannel.val().canalid).send({ embed: embed })
+
+                            }
+
+                        })
+   
                     })
 
                 }

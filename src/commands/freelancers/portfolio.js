@@ -18,9 +18,8 @@ module.exports = {
         if(user.val() === null) {
 
             database.ref(`Perfils/${message.author.id}`).set({
-                portfolio: args[0],
+                portfolio: args.join(' '),
                 avalia: 0,
-                email: 'Não definido.',
                 recebido: 0
             })
     
@@ -35,7 +34,7 @@ module.exports = {
         } else {
 
             database.ref(`Perfils/${message.author.id}`).update({
-                portfolio: args[0]
+                portfolio: args.join(' ')
             })
     
             var embed = {

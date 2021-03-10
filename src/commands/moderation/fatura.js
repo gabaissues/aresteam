@@ -54,7 +54,7 @@ module.exports = {
                 
                 var embed = {
                     title: ':shopping_cart: Fatura disponível para pagamento!',
-                    description: `Clique no link abaixo para efetuar o pagamento.\n\nFatura:\n${promise.body.init_point}\n\n:man_astronaut: Obrigado por **aceitar*8 trabalhar conosco!`,
+                    description: `Clique no link abaixo para efetuar o pagamento.\n\nFatura:\n${promise.body.init_point}\n\n:man_astronaut: Obrigado por **aceitar** trabalhar conosco!`,
                     color: '#4895EF'
                 }
 

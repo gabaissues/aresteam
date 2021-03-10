@@ -9,7 +9,7 @@ module.exports = async (client) => {
 
         var embed = {
             title: ':man_astronaut: Deseja adquirir um dos nossos serviços?',
-            description: `Contamos com uma equipe bem formada para fornecer um ótimo trabalho.\n\n:shopping_cart: **Qual dos nossos serviços você deseja adquirir?**\nVeja abaixo as categorias disponíveis de serviços.\n\n:one: Designer\n:two: Construções\n:three: Desenvolvimento\n\nLeia atentamente o canal <#782062328464146462> e <#807379434701193246> antes de efetuar um pedido de serviço.\n\nReaja ao **emoji** abaixo correspondente ao serviço que você deseja!`,
+            description: `Contamos com uma equipe bem formada para fornecer um ótimo trabalho.\n\n:shopping_cart: **Qual dos nossos serviços você deseja adquirir?**\nVeja abaixo as categorias disponíveis de serviços:\n\n:one: Designer\n:two: Construções\n:three: Desenvolvimento\n\nLeia atentamente o canal <#782062328464146462> e <#809823664849682452> antes de efetuar um pedido de serviço.\n\nReaja ao **emoji** abaixo correspondente ao serviço que você deseja!`,
             color: '#4895EF'
         }
 
@@ -42,6 +42,8 @@ module.exports = async (client) => {
         messages("809828302310604800", "👋", "Designer")
         messages("807376703366103050", "👋", "Desenvolvedor")
         messages("808461854477254696", "👋", "Construtor")
+
+        client.user.setActivity('discord.aresteam.com.br')
 
         //Adicione a linha a cima para caso queira adicionar novos formulários.
 

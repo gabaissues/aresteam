@@ -8,7 +8,7 @@ module.exports = {
 
         var embed = {
             title: ':man_scientist: Comando inválido!',
-            description: 'Você utilizou o comando incorretamente. Utilize: - perfil <usuário(a)>',
+            description: 'Você utilizou o comando incorretamente. Utilize: -perfil <usuário(a)>',
             color: 'RED'
         }
 
@@ -30,8 +30,8 @@ module.exports = {
         } else {
 
             var embed = {
-                title: ':man_astronaut: Perfil de Franklin',
-                description: `Leia abaixo informações desse perfil:\n\nE-mail: ${user.val().email}\nGanhos totais: ${user.val().recebido}\nÚltima avaliação: ${user.val().avalia}\n\nPortfólio: ${user.val().portfolio}`,
+                title: `:man_astronaut: Perfil de ${membro.user.username}`,
+                description: `Leia abaixo informações desse perfil:\n\nE-mail: ${user.val().email || "Indefinido."}\nGanhos totais: ${user.val().recebido.toLocaleString('pt-br',{style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })}\nÚltima avaliação: ${user.val().avalia}\n\nPortfólio: ${user.val().portfolio || "Indefinido."}`,
                 color: '#4895EF'
             }
 
